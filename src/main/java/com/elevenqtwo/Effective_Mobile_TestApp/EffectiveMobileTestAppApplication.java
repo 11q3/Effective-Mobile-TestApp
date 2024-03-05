@@ -1,4 +1,4 @@
-package com.elevenqtwo.Effective_MobileTestApp;
+package com.elevenqtwo.Effective_Mobile_TestApp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
