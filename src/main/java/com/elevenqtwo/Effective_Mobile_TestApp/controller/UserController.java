@@ -1,7 +1,9 @@
 package com.elevenqtwo.Effective_Mobile_TestApp.controller;
 
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserDto;
+import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserUpdateDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserExistsException;
+import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserNotFoundException;
 import com.elevenqtwo.Effective_Mobile_TestApp.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,5 +38,20 @@ public class UserController {
         }
 
         return ResponseEntity.ok("User added successfully!");
+    }
+
+    @PutMapping("/updateUser")
+    public ResponseEntity<Object> updateUser(@RequestBody UserUpdateDto userUpdateDto) {
+        try {
+            userService.updateUser(
+                    userUpdateDto.id,
+                    userUpdateDto.getPhoneNumbers(),
+                    userUpdateDto.getEmails()
+            );
+        } catch (UserExistsException | UserNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        return ResponseEntity.ok("Phone numbers updated successfully!");
     }
 }

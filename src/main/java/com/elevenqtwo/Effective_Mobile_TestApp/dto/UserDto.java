@@ -2,13 +2,13 @@ package com.elevenqtwo.Effective_Mobile_TestApp.dto;
 
 import com.elevenqtwo.Effective_Mobile_TestApp.model.BankAccount;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import java.sql.Date;
 import java.util.List;
 
-@Getter
-@Setter
+@Data
 public class UserDto {
 
     @JsonProperty("first_name")

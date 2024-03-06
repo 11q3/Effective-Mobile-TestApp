@@ -1,12 +1,15 @@
 package com.elevenqtwo.Effective_Mobile_TestApp.service;
 
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserExistsException;
+import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserNotFoundException;
 import com.elevenqtwo.Effective_Mobile_TestApp.model.BankAccount;
 import com.elevenqtwo.Effective_Mobile_TestApp.model.User;
 import com.elevenqtwo.Effective_Mobile_TestApp.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import java.sql.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -43,11 +46,24 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional
+    public void updateUser(Long id, List<String> phoneNumbers, List<String> emails) throws UserExistsException, UserNotFoundException {
+        User user = userRepository.findById(id).orElseThrow(() ->
+                new UserNotFoundException("User not found with id: " + id));
+
+        checkForDataUniqueness(null, emails, phoneNumbers);
+
+        setEmails(emails, user);
+        setPhoneNumbers(phoneNumbers, user);
+
+        userRepository.save(user);
+    }
+
     private void checkForDataUniqueness(String login, List<String> phoneNumbers, List<String> emails) throws UserExistsException {
         if (userRepository.findByLogin(login).isPresent()) {
             throw new UserExistsException("A user with this login already exists");
         }
-        if (userRepository.findByEmails(emails, emails.size()).isPresent()) {
+        if (userRepository.findByEmails(emails, emails.size()).isPresent()) { //TODO works wrong when multiple emails
             throw new UserExistsException("A user with this email already exists");
         }
 
