@@ -4,6 +4,7 @@ import com.elevenqtwo.Effective_Mobile_TestApp.model.BankAccount;
 import com.elevenqtwo.Effective_Mobile_TestApp.model.User;
 import com.elevenqtwo.Effective_Mobile_TestApp.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import java.sql.Date;
 import java.util.List;
 
 @Service
@@ -18,22 +19,26 @@ public class UserService {
 
     public void addUser(String firstName, String lastName, String middleName, //TODO maybe import there User object
                         String login, String password,
-                        BankAccount bankAccount, String dateOfBirth, List<String> emails, List<String> phoneNumbers) {
+                        Date dateOfBirth, List<String> phoneNumbers, List<String> emails, BankAccount bankAccount) {
 
         bankAccountService.createBankAccount(bankAccount);
 
-
-
         User user = new User();
+
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setMiddleName(middleName);
+        user.setLogin(login);  //TODO add proper password hashing here
+        user.setPassword(password);
+        setEmails(emails, user);
+        setPhoneNumbers(phoneNumbers, user);
         user.setDateOfBirth(dateOfBirth);
-
         user.setBankAccount(bankAccount);
 
-        user.setLogin(login);
+        userRepository.save(user);
+    }
 
+    private static void setEmails(List<String> emails, User user) {
         if(user.getEmails() != null) {
             for (String email : emails) {
                 user.getEmails().add(email);
@@ -42,7 +47,9 @@ public class UserService {
         else {
             user.setEmails(emails);
         }
+    }
 
+    private static void setPhoneNumbers(List<String> phoneNumbers, User user) {
         if(user.getPhoneNumbers() != null) {
             for (String phoneNumber : phoneNumbers) {
                 user.getPhoneNumbers().add(phoneNumber);
@@ -51,10 +58,5 @@ public class UserService {
         else {
             user.setPhoneNumbers(phoneNumbers);
         }
-
-        //TODO add proper password hashing here
-        user.setPassword(password);
-
-        userRepository.save(user);
     }
 }

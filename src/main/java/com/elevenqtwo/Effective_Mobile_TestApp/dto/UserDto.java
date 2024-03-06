@@ -1,17 +1,16 @@
 package com.elevenqtwo.Effective_Mobile_TestApp.dto;
 
-
 import com.elevenqtwo.Effective_Mobile_TestApp.model.BankAccount;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.math.BigDecimal;
+import java.sql.Date;
 import java.util.List;
 
 @Getter
 @Setter
 public class UserDto {
+
     @JsonProperty("first_name")
     private String firstName;
 
@@ -25,11 +24,8 @@ public class UserDto {
 
     private String password;
 
-    @JsonProperty("start_sum")
-    private BigDecimal startSum;
-
     @JsonProperty("date_of_birth")
-    private String dateOfBirth;
+    private Date dateOfBirth;
 
     private List<String> emails;
 

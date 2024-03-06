@@ -3,7 +3,6 @@ package com.elevenqtwo.Effective_Mobile_TestApp.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.math.BigDecimal;
 
 @Getter
