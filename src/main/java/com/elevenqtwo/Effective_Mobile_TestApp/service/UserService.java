@@ -1,5 +1,6 @@
 package com.elevenqtwo.Effective_Mobile_TestApp.service;
 
+import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserExistsException;
 import com.elevenqtwo.Effective_Mobile_TestApp.model.BankAccount;
 import com.elevenqtwo.Effective_Mobile_TestApp.model.User;
 import com.elevenqtwo.Effective_Mobile_TestApp.repository.UserRepository;
@@ -17,31 +18,41 @@ public class UserService {
         this.bankAccountService = bankAccountService;
     }
 
-    public void addUser(String firstName, String lastName, String middleName, //TODO maybe import there User object
+    public void addUser(String firstName, String lastName, String middleName,
                         String login, String password,
-                        Date dateOfBirth, List<String> phoneNumbers, List<String> emails, BankAccount bankAccount) {
+                        Date dateOfBirth, List<String> phoneNumbers,
+                        List<String> emails, BankAccount bankAccount)  throws UserExistsException {
+        checkForDataUniqueness(login, phoneNumbers, emails);
 
         bankAccountService.createBankAccount(bankAccount);
 
-        User user = new User(); //TODO add regexes for fields maybe
-
+        User user = new User();
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setMiddleName(middleName);
-        user.setLogin(login);  //TODO add proper password hashing here
+        user.setLogin(login);
         user.setPassword(password);
+
         setEmails(emails, user);
+
         setPhoneNumbers(phoneNumbers, user);
+
         user.setDateOfBirth(dateOfBirth);
         user.setBankAccount(bankAccount);
 
-        try {
-            userRepository.save(user);
-        } catch (Exception e) {
-            System.err.println("Error saving user: " + e.getMessage()); //TODO add proper logging later
+        userRepository.save(user);
+    }
 
-            bankAccountService.deleteBankAccount(bankAccount.getId());
-            throw e;
+    private void checkForDataUniqueness(String login, List<String> phoneNumbers, List<String> emails) throws UserExistsException {
+        if (userRepository.findByLogin(login).isPresent()) {
+            throw new UserExistsException("A user with this login already exists");
+        }
+        if (userRepository.findByEmails(emails, emails.size()).isPresent()) {
+            throw new UserExistsException("A user with this email already exists");
+        }
+
+        if (userRepository.findByPhoneNumbers(phoneNumbers, phoneNumbers.size()).isPresent()) {
+            throw new UserExistsException("A user with this phone number already exists");
         }
     }
 
