@@ -23,7 +23,7 @@ public class UserService {
 
         bankAccountService.createBankAccount(bankAccount);
 
-        User user = new User();
+        User user = new User(); //TODO add regexes for fields maybe
 
         user.setFirstName(firstName);
         user.setLastName(lastName);
@@ -35,7 +35,14 @@ public class UserService {
         user.setDateOfBirth(dateOfBirth);
         user.setBankAccount(bankAccount);
 
-        userRepository.save(user);
+        try {
+            userRepository.save(user);
+        } catch (Exception e) {
+            System.err.println("Error saving user: " + e.getMessage()); //TODO add proper logging later
+
+            bankAccountService.deleteBankAccount(bankAccount.getId());
+            throw e;
+        }
     }
 
     private static void setEmails(List<String> emails, User user) {

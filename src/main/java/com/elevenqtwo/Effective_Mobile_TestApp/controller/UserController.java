@@ -2,6 +2,7 @@ package com.elevenqtwo.Effective_Mobile_TestApp.controller;
 
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.service.UserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -15,8 +16,7 @@ public class UserController {
     }
 
     @PostMapping("/addUser")
-    public void addUser(@RequestBody UserDto userDto) {
-
+    public ResponseEntity<Object> addUser(@RequestBody UserDto userDto) {
        userService.addUser(
                userDto.getFirstName(),
                userDto.getLastName(),
@@ -24,9 +24,11 @@ public class UserController {
                userDto.getLogin(),
                userDto.getPassword(),
                userDto.getDateOfBirth(),
-               userDto.getEmails(),
                userDto.getPhoneNumbers(),
+               userDto.getEmails(),
                userDto.getBankAccount()
                );
+
+      return ResponseEntity.ok("User added successfully!");
     }
 }

@@ -15,4 +15,8 @@ public class BankAccountService {
     public void createBankAccount(BankAccount bankAccount) {
         bankAccountRepository.save(bankAccount);
     }
+
+    public void deleteBankAccount(long id) {
+        bankAccountRepository.deleteById(id);
+    }
 }
