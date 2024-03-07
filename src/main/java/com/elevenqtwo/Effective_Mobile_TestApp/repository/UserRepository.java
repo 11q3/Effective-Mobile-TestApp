@@ -10,12 +10,11 @@ import java.util.Optional;
 
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByLogin(String login);
+    boolean existsByLogin(String login);
 
-    @Query("SELECT u FROM User u JOIN u.emails e WHERE e IN :emails GROUP BY u HAVING COUNT(u) = :emailCount")
-    Optional<User> findByEmails(@Param("emails") List<String> emails, @Param("emailCount") int emailCount);
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u IN (SELECT u2 FROM User u2 JOIN u2.emails e WHERE e IN :emails)")
+    boolean existsByEmails(List<String> emails);
 
-    @Query("SELECT u FROM User u JOIN u.phoneNumbers p WHERE p IN :phoneNumbers GROUP BY u HAVING COUNT(u) = :phoneCount")
-    Optional<User> findByPhoneNumbers(@Param("phoneNumbers") List<String> phoneNumbers, @Param("phoneCount") int phoneCount);
-
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u IN (SELECT u2 FROM User u2 JOIN u2.phoneNumbers p WHERE p IN :phoneNumbers)")
+    boolean existsByPhoneNumbers(List<String> phoneNumbers);
 }

@@ -59,7 +59,7 @@ public class UserService {
     }
 
     @Transactional
-    public void addUserEmails(Long id, List<String> emails) throws UserExistsException, UserNotFoundException { //TODO maybe surrond with try/catch
+    public void addUserEmails(Long id, List<String> emails) throws UserExistsException, UserNotFoundException { //TODO maybe surround with try/catch
         User user = userRepository.findById(id).orElseThrow(() ->
                 new UserNotFoundException("User not found with id: " + id));
 
@@ -99,25 +99,25 @@ public class UserService {
     }
 
     private void checkForDataPresence(List<String> replacingPhoneNumbers) throws UserDataDoesNotExistException { //TODO maybe make this work for any unique data fields
-        if (userRepository.findByPhoneNumbers(
-                replacingPhoneNumbers, replacingPhoneNumbers.size()).isEmpty())
-        {
+        if (!userRepository.existsByPhoneNumbers(replacingPhoneNumbers)) {
             throw new UserDataDoesNotExistException("Patch data to replace does not exist");
         }
     }
 
+    //TODO delete userData method
+
     private void checkForDataUniqueness(String login, List<String> phoneNumbers, List<String> emails) throws UserExistsException { //TODO maybe make this work for any unique data fields
-        if (userRepository.findByLogin(login).isPresent()) {
+        if (userRepository.existsByLogin(login)) {
             throw new UserExistsException("A user with this login already exists");
         }
         if (emails != null) {
-            if(userRepository.findByEmails(emails, emails.size()).isPresent()) { //TODO works wrong when multiple emails
+            if(userRepository.existsByEmails(emails)) { //TODO works wrong when multiple emails
                 throw new UserExistsException("A user with this email already exists");
             }
         }
 
         if (phoneNumbers != null) {
-            if (userRepository.findByPhoneNumbers(phoneNumbers, phoneNumbers.size()).isPresent()) {
+            if (userRepository.existsByPhoneNumbers(phoneNumbers)) {
                 throw new UserExistsException("A user with this phone number already exists"); //TODO maybe change exception body
             }
         }
