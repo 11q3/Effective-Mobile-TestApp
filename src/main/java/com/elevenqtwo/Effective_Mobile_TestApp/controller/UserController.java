@@ -2,6 +2,7 @@ package com.elevenqtwo.Effective_Mobile_TestApp.controller;
 
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserUpdateDto;
+import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserDataDoesNotExistException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserExistsException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserNotFoundException;
 import com.elevenqtwo.Effective_Mobile_TestApp.service.UserService;
@@ -40,18 +41,57 @@ public class UserController {
         return ResponseEntity.ok("User added successfully!");
     }
 
-    @PutMapping("/updateUser")
-    public ResponseEntity<Object> updateUser(@RequestBody UserUpdateDto userUpdateDto) {
+    @PostMapping("/addUserPhoneNumbers")
+    public ResponseEntity<Object> addUserPhoneNumbers(@RequestBody UserUpdateDto userUpdateDto) {
         try {
-            userService.updateUser(
+            userService.addUserPhoneNumbers(
                     userUpdateDto.id,
-                    userUpdateDto.getPhoneNumbers(),
+                    userUpdateDto.getPhoneNumbers()
+            );
+        } catch (UserExistsException | UserNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        return ResponseEntity.ok("User updated successfully!");
+    }
+
+    @PostMapping("/addUserEmails")
+    public ResponseEntity<Object> addUserEmails(@RequestBody UserUpdateDto userUpdateDto) {
+        try { //TODO extract this logic deeper. maybe.
+            userService.addUserEmails(
+                    userUpdateDto.id,
                     userUpdateDto.getEmails()
             );
         } catch (UserExistsException | UserNotFoundException e) {
             throw new RuntimeException(e);
         }
 
-        return ResponseEntity.ok("Phone numbers updated successfully!");
+        return ResponseEntity.ok("User emails added successfully!");
+    }
+
+    @PatchMapping("/patchUserEmails")
+    public ResponseEntity<Object> patchUserEmails(@RequestBody UserUpdateDto userUpdateDto) {
+        try {
+            userService.patchUserEmails(userUpdateDto.id,
+                    userUpdateDto.getEmails(),
+                    userUpdateDto.getReplacedEmails());
+        }
+         catch (UserNotFoundException | UserExistsException e) {
+            throw new RuntimeException(e);
+        }
+        return ResponseEntity.ok("User emails updated successfully!");
+    }
+
+    @PatchMapping("/patchUserPhoneNumbers")
+    public ResponseEntity<Object> patchUserPhoneNumbers(@RequestBody UserUpdateDto userUpdateDto) {
+        try {
+            userService.patchUserPhoneNumbers(userUpdateDto.id,
+                    userUpdateDto.getPhoneNumbers(),
+                    userUpdateDto.getReplacedPhoneNumbers());
+        }
+        catch (UserNotFoundException | UserExistsException | UserDataDoesNotExistException e) {
+            throw new RuntimeException(e);
+        }
+        return ResponseEntity.ok("User phone numbers updated successfully!");
     }
 }

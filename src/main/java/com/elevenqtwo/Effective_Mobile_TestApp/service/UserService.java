@@ -1,5 +1,6 @@
 package com.elevenqtwo.Effective_Mobile_TestApp.service;
 
+import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserDataDoesNotExistException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserExistsException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserNotFoundException;
 import com.elevenqtwo.Effective_Mobile_TestApp.model.BankAccount;
@@ -9,7 +10,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import java.sql.Date;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserService {
@@ -47,33 +47,105 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUser(Long id, List<String> phoneNumbers, List<String> emails) throws UserExistsException, UserNotFoundException {
+    public void addUserPhoneNumbers(Long id, List<String> phoneNumbers) throws UserExistsException, UserNotFoundException {
         User user = userRepository.findById(id).orElseThrow(() ->
                 new UserNotFoundException("User not found with id: " + id));
 
-        checkForDataUniqueness(null, emails, phoneNumbers);
+        checkForDataUniqueness(null, phoneNumbers, null);
 
-        setEmails(emails, user);
         setPhoneNumbers(phoneNumbers, user);
 
         userRepository.save(user);
     }
 
-    private void checkForDataUniqueness(String login, List<String> phoneNumbers, List<String> emails) throws UserExistsException {
-        if (userRepository.findByLogin(login).isPresent()) {
-            throw new UserExistsException("A user with this login already exists");
-        }
-        if (userRepository.findByEmails(emails, emails.size()).isPresent()) { //TODO works wrong when multiple emails
-            throw new UserExistsException("A user with this email already exists");
-        }
+    @Transactional
+    public void addUserEmails(Long id, List<String> emails) throws UserExistsException, UserNotFoundException { //TODO maybe surrond with try/catch
+        User user = userRepository.findById(id).orElseThrow(() ->
+                new UserNotFoundException("User not found with id: " + id));
 
-        if (userRepository.findByPhoneNumbers(phoneNumbers, phoneNumbers.size()).isPresent()) {
-            throw new UserExistsException("A user with this phone number already exists");
+        checkForDataUniqueness(null, null, emails);
+
+        setEmails(emails, user);
+
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void patchUserEmails(Long id, List<String> emails, List<String> replacedEmails)  //TODO maybe surround with try/catch
+            throws UserNotFoundException, UserExistsException
+    {
+        User user = userRepository.findById(id).orElseThrow(() ->
+                new UserNotFoundException("User not found with id: " + id));
+
+        checkForDataUniqueness(null, null, emails); //TODO add check if replacedEmails are exist
+
+        replaceEmails(emails, replacedEmails, user);
+
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void patchUserPhoneNumbers(Long id, List<String> replacingPhoneNumbers, List<String> replacedPhoneNumbers)  //TODO maybe surround with try/catch
+            throws UserNotFoundException, UserExistsException, UserDataDoesNotExistException {
+        User user = userRepository.findById(id).orElseThrow(() ->
+                new UserNotFoundException("User not found with id: " + id));
+
+        checkForDataUniqueness(null, replacingPhoneNumbers, null); //TODO add check if replacedPhoneNumbers are exist
+        checkForDataPresence(replacingPhoneNumbers);
+
+        replacePhoneNumbers(replacingPhoneNumbers, replacedPhoneNumbers, user);
+
+        userRepository.save(user);
+    }
+
+    private void checkForDataPresence(List<String> replacingPhoneNumbers) throws UserDataDoesNotExistException { //TODO maybe make this work for any unique data fields
+        if (userRepository.findByPhoneNumbers(
+                replacingPhoneNumbers, replacingPhoneNumbers.size()).isEmpty())
+        {
+            throw new UserDataDoesNotExistException("Patch data to replace does not exist");
         }
     }
 
+    private void checkForDataUniqueness(String login, List<String> phoneNumbers, List<String> emails) throws UserExistsException { //TODO maybe make this work for any unique data fields
+        if (userRepository.findByLogin(login).isPresent()) {
+            throw new UserExistsException("A user with this login already exists");
+        }
+        if (emails != null) {
+            if(userRepository.findByEmails(emails, emails.size()).isPresent()) { //TODO works wrong when multiple emails
+                throw new UserExistsException("A user with this email already exists");
+            }
+        }
+
+        if (phoneNumbers != null) {
+            if (userRepository.findByPhoneNumbers(phoneNumbers, phoneNumbers.size()).isPresent()) {
+                throw new UserExistsException("A user with this phone number already exists"); //TODO maybe change exception body
+            }
+        }
+    }
+
+    private void replaceEmails(List<String> replacingEmails, List<String> replacedEmails, User user) { //TODO add javadoc maybe
+        List<String> userEmails = user.getEmails();
+
+        for(String replacedEmail : replacedEmails)
+            userEmails.remove(replacedEmail);
+        userEmails.addAll(replacingEmails);
+
+        user.setEmails(userEmails);
+    }
+
+    private void replacePhoneNumbers(List<String> replacingPhoneNumbers, List<String> replacedPhoneNumbers, User user) { //TODO add javadoc maybe
+        List<String> userEmails = user.getEmails();
+
+        for(String replacedPhoneNumber : replacedPhoneNumbers)
+            userEmails.remove(replacedPhoneNumber);
+        userEmails.addAll(replacingPhoneNumbers);
+
+        user.setEmails(userEmails);
+    }
+
+
     private static void setEmails(List<String> emails, User user) {
-        if(user.getEmails() != null) {
+        if(user.getEmails() != null) { //TODO maybe delete this check because user must have an email
             for (String email : emails) {
                 user.getEmails().add(email);
             }

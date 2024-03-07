@@ -13,7 +13,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ResponseEntity<String> handleUserExistsException(UserExistsException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
     @ExceptionHandler(BankAccountCreationException.class)
@@ -21,4 +21,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleBankAccountCreationException(BankAccountCreationException ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
     }
+
+    @ExceptionHandler(UserDataDoesNotExistException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<String> handleUserDataDoesNotExistException(UserDataDoesNotExistException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    /*@ExceptionHandler(Exception.class) //TODO if uncomment this method, UserExistException isn`t working.
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseEntity<String> handleUnknownException(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + ex.getMessage());
+    }*/
 }
