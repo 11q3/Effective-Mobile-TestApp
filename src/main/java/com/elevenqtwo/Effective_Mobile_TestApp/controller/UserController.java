@@ -19,10 +19,10 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/addUser")
-    public ResponseEntity<Object> addUser(@RequestBody UserDto userDto) {
+    @PostMapping("/createUser")
+    public ResponseEntity<Object> createUser(@RequestBody UserDto userDto) {
         try {
-            userService.addUser(
+            userService.createUser(
                     userDto.getFirstName(),
                     userDto.getLastName(),
                     userDto.getMiddleName(),
@@ -76,7 +76,7 @@ public class UserController {
                     userUpdateDto.getEmails(),
                     userUpdateDto.getReplacedEmails());
         }
-         catch (UserNotFoundException | UserExistsException e) {
+         catch (UserNotFoundException | UserExistsException | UserDataDoesNotExistException e) {
             throw new RuntimeException(e);
         }
         return ResponseEntity.ok("User emails updated successfully!");
@@ -93,5 +93,27 @@ public class UserController {
             throw new RuntimeException(e);
         }
         return ResponseEntity.ok("User phone numbers updated successfully!");
+    }
+
+    @DeleteMapping("/deleteUserEmails")
+    public ResponseEntity<Object> deleteUserEmails(@RequestBody UserUpdateDto userUpdateDto) {
+        try {
+            userService.deleteUserEmails(userUpdateDto.id,
+                    userUpdateDto.getEmails());
+        } catch (UserNotFoundException | UserDataDoesNotExistException | UserExistsException e) {
+            throw new RuntimeException(e);
+        }
+        return ResponseEntity.ok("User emails deleted successfully!");
+    }
+
+    @DeleteMapping("/deleteUserPhoneNumbers")
+    public ResponseEntity<Object> deleteUserPhoneNumbers(@RequestBody UserUpdateDto userUpdateDto) {
+        try {
+            userService.deleteUserPhoneNumbers(userUpdateDto.id,
+                    userUpdateDto.getPhoneNumbers());
+        } catch (UserNotFoundException | UserDataDoesNotExistException | UserExistsException e) {
+            throw new RuntimeException(e);
+        }
+        return ResponseEntity.ok("User phone numbers deleted successfully!");
     }
 }

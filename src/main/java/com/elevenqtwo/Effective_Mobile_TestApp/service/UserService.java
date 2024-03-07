@@ -1,5 +1,6 @@
 package com.elevenqtwo.Effective_Mobile_TestApp.service;
 
+import com.elevenqtwo.Effective_Mobile_TestApp.exception.NoFieldsRemainingException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserDataDoesNotExistException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserExistsException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserNotFoundException;
@@ -9,7 +10,9 @@ import com.elevenqtwo.Effective_Mobile_TestApp.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import java.sql.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class UserService {
@@ -21,10 +24,10 @@ public class UserService {
         this.bankAccountService = bankAccountService;
     }
 
-    public void addUser(String firstName, String lastName, String middleName,
-                        String login, String password,
-                        Date dateOfBirth, List<String> phoneNumbers,
-                        List<String> emails, BankAccount bankAccount)  throws UserExistsException {
+    public void createUser(String firstName, String lastName, String middleName,
+                           String login, String password,
+                           Date dateOfBirth, List<String> phoneNumbers,
+                           List<String> emails, BankAccount bankAccount)  throws UserExistsException {
         checkForDataUniqueness(login, phoneNumbers, emails);
 
         bankAccountService.createBankAccount(bankAccount);
@@ -72,12 +75,12 @@ public class UserService {
 
     @Transactional
     public void patchUserEmails(Long id, List<String> emails, List<String> replacedEmails)  //TODO maybe surround with try/catch
-            throws UserNotFoundException, UserExistsException
-    {
+            throws UserNotFoundException, UserExistsException, UserDataDoesNotExistException {
         User user = userRepository.findById(id).orElseThrow(() ->
                 new UserNotFoundException("User not found with id: " + id));
 
-        checkForDataUniqueness(null, null, emails); //TODO add check if replacedEmails are exist
+        checkForDataPresence(emails, user.getEmails());
+        checkForDataUniqueness(null, null, emails);
 
         replaceEmails(emails, replacedEmails, user);
 
@@ -90,28 +93,65 @@ public class UserService {
         User user = userRepository.findById(id).orElseThrow(() ->
                 new UserNotFoundException("User not found with id: " + id));
 
+        checkForDataPresence(replacingPhoneNumbers, user.getPhoneNumbers());
         checkForDataUniqueness(null, replacingPhoneNumbers, null); //TODO add check if replacedPhoneNumbers are exist
-        checkForDataPresence(replacingPhoneNumbers);
 
         replacePhoneNumbers(replacingPhoneNumbers, replacedPhoneNumbers, user);
 
         userRepository.save(user);
     }
 
-    private void checkForDataPresence(List<String> replacingPhoneNumbers) throws UserDataDoesNotExistException { //TODO maybe make this work for any unique data fields
-        if (!userRepository.existsByPhoneNumbers(replacingPhoneNumbers)) {
-            throw new UserDataDoesNotExistException("Patch data to replace does not exist");
+    @Transactional
+    public void deleteUserPhoneNumbers(Long id, List<String> phoneNumbers) throws UserNotFoundException, UserDataDoesNotExistException, UserExistsException {
+        User user = userRepository.findById(id).orElseThrow(() ->
+                new UserNotFoundException("User not found with id: " + id));
+
+        checkForDataPresence(phoneNumbers, user.phoneNumbers);
+
+        if (phoneNumbers.size() >= user.getPhoneNumbers().size())
+            throw new NoFieldsRemainingException("phone_number");
+
+        for (String phoneNumber: phoneNumbers) {
+            user.getPhoneNumbers().remove(phoneNumber);
+        }
+
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteUserEmails(Long id, List<String> emails) throws UserNotFoundException, UserDataDoesNotExistException, UserExistsException {
+        User user = userRepository.findById(id).orElseThrow(() ->
+                new UserNotFoundException("User not found with id: " + id));
+
+        checkForDataPresence(emails, user.getEmails());
+
+        if (emails.size() >= user.getEmails().size())
+            throw new NoFieldsRemainingException("email");
+
+        for (String email: emails) {
+            user.getEmails().remove(email);
+        }
+
+        userRepository.save(user);
+    }
+    private void checkForDataPresence(List<String> providedFields, List<String> userFields) throws UserDataDoesNotExistException {
+        if (providedFields != null && userFields != null) {
+            Set<String> intersection = new HashSet<>(providedFields);
+            intersection.retainAll(userFields);
+
+            if (intersection.size() != providedFields.size()) {
+                throw new UserDataDoesNotExistException("Fields provided for deletion do not exist for the user");
+            }
         }
     }
 
-    //TODO delete userData method
 
     private void checkForDataUniqueness(String login, List<String> phoneNumbers, List<String> emails) throws UserExistsException { //TODO maybe make this work for any unique data fields
         if (userRepository.existsByLogin(login)) {
             throw new UserExistsException("A user with this login already exists");
         }
         if (emails != null) {
-            if(userRepository.existsByEmails(emails)) { //TODO works wrong when multiple emails
+            if(userRepository.existsByEmails(emails)) {
                 throw new UserExistsException("A user with this email already exists");
             }
         }
@@ -145,24 +185,22 @@ public class UserService {
 
 
     private static void setEmails(List<String> emails, User user) {
-        if(user.getEmails() != null) { //TODO maybe delete this check because user must have an email
+        if(user.getEmails() == null) {
+            user.setEmails(emails);
+        } else {
             for (String email : emails) {
                 user.getEmails().add(email);
             }
         }
-        else {
-            user.setEmails(emails);
-        }
     }
 
     private static void setPhoneNumbers(List<String> phoneNumbers, User user) {
-        if(user.getPhoneNumbers() != null) {
+        if(user.getPhoneNumbers() == null) {
+            user.setPhoneNumbers(phoneNumbers);
+        } else {
             for (String phoneNumber : phoneNumbers) {
                 user.getPhoneNumbers().add(phoneNumber);
             }
-        }
-        else {
-            user.setPhoneNumbers(phoneNumbers);
         }
     }
 }
