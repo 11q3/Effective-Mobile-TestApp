@@ -2,6 +2,7 @@ package com.elevenqtwo.Effective_Mobile_TestApp.controller;
 
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserUpdateDto;
+import com.elevenqtwo.Effective_Mobile_TestApp.exception.IncorrectUserDataFormatException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserDataDoesNotExistException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserExistsException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserNotFoundException;
@@ -34,7 +35,7 @@ public class UserController {
                     userDto.getBankAccount()
             );
         }
-        catch (UserExistsException e) {
+        catch (UserExistsException | IncorrectUserDataFormatException e) {
             throw new RuntimeException(e);
         }
 
@@ -48,7 +49,7 @@ public class UserController {
                     userUpdateDto.id,
                     userUpdateDto.getPhoneNumbers()
             );
-        } catch (UserExistsException | UserNotFoundException e) {
+        } catch (UserExistsException | UserNotFoundException | IncorrectUserDataFormatException e) {
             throw new RuntimeException(e);
         }
 
@@ -62,7 +63,7 @@ public class UserController {
                     userUpdateDto.id,
                     userUpdateDto.getEmails()
             );
-        } catch (UserExistsException | UserNotFoundException e) {
+        } catch (UserExistsException | UserNotFoundException | IncorrectUserDataFormatException e) {
             throw new RuntimeException(e);
         }
 
@@ -76,7 +77,8 @@ public class UserController {
                     userUpdateDto.getEmails(),
                     userUpdateDto.getReplacedEmails());
         }
-         catch (UserNotFoundException | UserExistsException | UserDataDoesNotExistException e) {
+         catch (UserNotFoundException | UserExistsException | UserDataDoesNotExistException |
+                IncorrectUserDataFormatException e) {
             throw new RuntimeException(e);
         }
         return ResponseEntity.ok("User emails updated successfully!");
@@ -89,7 +91,8 @@ public class UserController {
                     userUpdateDto.getPhoneNumbers(),
                     userUpdateDto.getReplacedPhoneNumbers());
         }
-        catch (UserNotFoundException | UserExistsException | UserDataDoesNotExistException e) {
+        catch (UserNotFoundException | UserExistsException | UserDataDoesNotExistException |
+               IncorrectUserDataFormatException e) {
             throw new RuntimeException(e);
         }
         return ResponseEntity.ok("User phone numbers updated successfully!");

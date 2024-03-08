@@ -34,9 +34,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
-    @ExceptionHandler(NoFieldsRemainingException.class)
+    @ExceptionHandler(NoUserFieldsRemainingException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> handleNoFieldsRemainingException(NoFieldsRemainingException ex) {
+    public ResponseEntity<String> handleNoFieldsRemainingException(NoUserFieldsRemainingException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(IncorrectUserDataFormatException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<String> handleIncorrectUserDataFormatException(IncorrectUserDataFormatException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 

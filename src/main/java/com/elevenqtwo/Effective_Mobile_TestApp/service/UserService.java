@@ -1,9 +1,6 @@
 package com.elevenqtwo.Effective_Mobile_TestApp.service;
 
-import com.elevenqtwo.Effective_Mobile_TestApp.exception.NoFieldsRemainingException;
-import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserDataDoesNotExistException;
-import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserExistsException;
-import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserNotFoundException;
+import com.elevenqtwo.Effective_Mobile_TestApp.exception.*;
 import com.elevenqtwo.Effective_Mobile_TestApp.model.BankAccount;
 import com.elevenqtwo.Effective_Mobile_TestApp.model.User;
 import com.elevenqtwo.Effective_Mobile_TestApp.repository.UserRepository;
@@ -27,7 +24,9 @@ public class UserService {
     public void createUser(String firstName, String lastName, String middleName,
                            String login, String password,
                            Date dateOfBirth, List<String> phoneNumbers,
-                           List<String> emails, BankAccount bankAccount)  throws UserExistsException {
+                           List<String> emails, BankAccount bankAccount) throws UserExistsException, IncorrectUserDataFormatException {
+
+        checkForDataFormat(phoneNumbers, emails);
         checkForDataUniqueness(login, phoneNumbers, emails);
 
         bankAccountService.createBankAccount(bankAccount);
@@ -50,10 +49,11 @@ public class UserService {
     }
 
     @Transactional
-    public void addUserPhoneNumbers(Long id, List<String> phoneNumbers) throws UserExistsException, UserNotFoundException {
+    public void addUserPhoneNumbers(Long id, List<String> phoneNumbers) throws UserExistsException, UserNotFoundException, IncorrectUserDataFormatException {
         User user = userRepository.findById(id).orElseThrow(() ->
                 new UserNotFoundException("User not found with id: " + id));
 
+        checkForDataFormat(phoneNumbers, null);
         checkForDataUniqueness(null, phoneNumbers, null);
 
         setPhoneNumbers(phoneNumbers, user);
@@ -62,10 +62,11 @@ public class UserService {
     }
 
     @Transactional
-    public void addUserEmails(Long id, List<String> emails) throws UserExistsException, UserNotFoundException { //TODO maybe surround with try/catch
+    public void addUserEmails(Long id, List<String> emails) throws UserExistsException, UserNotFoundException, IncorrectUserDataFormatException { //TODO maybe surround with try/catch
         User user = userRepository.findById(id).orElseThrow(() ->
                 new UserNotFoundException("User not found with id: " + id));
 
+        checkForDataFormat(null, emails);
         checkForDataUniqueness(null, null, emails);
 
         setEmails(emails, user);
@@ -75,10 +76,11 @@ public class UserService {
 
     @Transactional
     public void patchUserEmails(Long id, List<String> emails, List<String> replacedEmails)  //TODO maybe surround with try/catch
-            throws UserNotFoundException, UserExistsException, UserDataDoesNotExistException {
+            throws UserNotFoundException, UserExistsException, UserDataDoesNotExistException, IncorrectUserDataFormatException {
         User user = userRepository.findById(id).orElseThrow(() ->
                 new UserNotFoundException("User not found with id: " + id));
 
+        checkForDataFormat(null, emails);
         checkForDataPresence(emails, user.getEmails());
         checkForDataUniqueness(null, null, emails);
 
@@ -88,15 +90,16 @@ public class UserService {
     }
 
     @Transactional
-    public void patchUserPhoneNumbers(Long id, List<String> replacingPhoneNumbers, List<String> replacedPhoneNumbers)  //TODO maybe surround with try/catch
-            throws UserNotFoundException, UserExistsException, UserDataDoesNotExistException {
+    public void patchUserPhoneNumbers(Long id, List<String> phoneNumbers, List<String> replacedPhoneNumbers)  //TODO maybe surround with try/catch
+            throws UserNotFoundException, UserExistsException, UserDataDoesNotExistException, IncorrectUserDataFormatException {
         User user = userRepository.findById(id).orElseThrow(() ->
                 new UserNotFoundException("User not found with id: " + id));
 
-        checkForDataPresence(replacingPhoneNumbers, user.getPhoneNumbers());
-        checkForDataUniqueness(null, replacingPhoneNumbers, null); //TODO add check if replacedPhoneNumbers are exist
+        checkForDataFormat(phoneNumbers, null);
+        checkForDataPresence(phoneNumbers, user.getPhoneNumbers());
+        checkForDataUniqueness(null, phoneNumbers, null); //TODO add check if replacedPhoneNumbers are exist
 
-        replacePhoneNumbers(replacingPhoneNumbers, replacedPhoneNumbers, user);
+        replacePhoneNumbers(phoneNumbers, replacedPhoneNumbers, user);
 
         userRepository.save(user);
     }
@@ -109,7 +112,7 @@ public class UserService {
         checkForDataPresence(phoneNumbers, user.phoneNumbers);
 
         if (phoneNumbers.size() >= user.getPhoneNumbers().size())
-            throw new NoFieldsRemainingException("phone_number");
+            throw new NoUserFieldsRemainingException("phone_number");
 
         for (String phoneNumber: phoneNumbers) {
             user.getPhoneNumbers().remove(phoneNumber);
@@ -126,7 +129,7 @@ public class UserService {
         checkForDataPresence(emails, user.getEmails());
 
         if (emails.size() >= user.getEmails().size())
-            throw new NoFieldsRemainingException("email");
+            throw new NoUserFieldsRemainingException("email");
 
         for (String email: emails) {
             user.getEmails().remove(email);
@@ -159,6 +162,28 @@ public class UserService {
         if (phoneNumbers != null) {
             if (userRepository.existsByPhoneNumbers(phoneNumbers)) {
                 throw new UserExistsException("A user with this phone number already exists"); //TODO maybe change exception body
+            }
+        }
+    }
+
+    private void checkForDataFormat(List<String> phoneNumbers, List<String> emails) throws IncorrectUserDataFormatException {
+        if (emails != null) {
+            for (String email : emails) {
+                String emailRegex = "[_A-Za-z0-9-]+@[A-Za-z0-9-]+(.[A-Za-z0-9-]+)";
+
+                if (!email.matches(emailRegex)) {
+                    throw new IncorrectUserDataFormatException("An email is not in a valid format");
+                }
+            }
+        }
+
+        if (phoneNumbers != null) {
+            for (String phoneNumber : phoneNumbers) {
+                String phoneNumberRegex = "^\\+[0-9]{1,3}-?[0-9]{1,4}-?[0-9]{1,4}-?[0-9]{1,4}-?[0-9]{1,4}$";
+
+                if (!phoneNumber.matches(phoneNumberRegex)) {
+                    throw new IncorrectUserDataFormatException("A phone number is not in a valid format"); //E.164 numbering plan.
+                }
             }
         }
     }
