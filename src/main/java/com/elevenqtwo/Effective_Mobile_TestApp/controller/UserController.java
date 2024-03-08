@@ -1,14 +1,19 @@
 package com.elevenqtwo.Effective_Mobile_TestApp.controller;
 
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserDto;
+import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserSearchResultDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserUpdateDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.IncorrectUserDataFormatException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserDataDoesNotExistException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserExistsException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserNotFoundException;
+import com.elevenqtwo.Effective_Mobile_TestApp.model.User;
 import com.elevenqtwo.Effective_Mobile_TestApp.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.sql.Date;
+import java.util.List;
 
 
 @RestController
@@ -118,5 +123,15 @@ public class UserController {
             throw new RuntimeException(e);
         }
         return ResponseEntity.ok("User phone numbers deleted successfully!");
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<UserSearchResultDto>> searchUsers(
+            @RequestParam(required = false) Date dateOfBirth,
+            @RequestParam(required = false) List<String> phoneNumbers,
+            @RequestParam(required = false) String fullName,
+            @RequestParam(required = false) List<String> emails) {
+        List<UserSearchResultDto> users =  userService.searchUsers(dateOfBirth, phoneNumbers, emails, fullName);
+        return ResponseEntity.ok(users);
     }
 }

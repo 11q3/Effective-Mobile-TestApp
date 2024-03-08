@@ -1,5 +1,6 @@
 package com.elevenqtwo.Effective_Mobile_TestApp.service;
 
+import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserSearchResultDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.*;
 import com.elevenqtwo.Effective_Mobile_TestApp.model.BankAccount;
 import com.elevenqtwo.Effective_Mobile_TestApp.model.User;
@@ -105,7 +106,7 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteUserPhoneNumbers(Long id, List<String> phoneNumbers) throws UserNotFoundException, UserDataDoesNotExistException, UserExistsException {
+    public void deleteUserPhoneNumbers(Long id, List<String> phoneNumbers) throws UserNotFoundException, UserDataDoesNotExistException, UserExistsException { //TODO maybe surround with try/catch
         User user = userRepository.findById(id).orElseThrow(() ->
                 new UserNotFoundException("User not found with id: " + id));
 
@@ -122,7 +123,7 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteUserEmails(Long id, List<String> emails) throws UserNotFoundException, UserDataDoesNotExistException, UserExistsException {
+    public void deleteUserEmails(Long id, List<String> emails) throws UserNotFoundException, UserDataDoesNotExistException, UserExistsException { //TODO maybe surround with try/catch
         User user = userRepository.findById(id).orElseThrow(() ->
                 new UserNotFoundException("User not found with id: " + id));
 
@@ -137,7 +138,12 @@ public class UserService {
 
         userRepository.save(user);
     }
-    private void checkForDataPresence(List<String> providedFields, List<String> userFields) throws UserDataDoesNotExistException {
+
+    @Transactional
+    public List<UserSearchResultDto> searchUsers(Date dateOfBirth, List<String> phoneNumbers, List<String> emails, String fullName) {
+        return userRepository.searchUsers(dateOfBirth, phoneNumbers, emails, fullName);
+    }
+    private void checkForDataPresence(List<String> providedFields, List<String> userFields) throws UserDataDoesNotExistException { //TODO maybe surround with try/catch
         if (providedFields != null && userFields != null) {
             Set<String> intersection = new HashSet<>(providedFields);
             intersection.retainAll(userFields);
@@ -149,7 +155,7 @@ public class UserService {
     }
 
 
-    private void checkForDataUniqueness(String login, List<String> phoneNumbers, List<String> emails) throws UserExistsException { //TODO maybe make this work for any unique data fields
+    private void checkForDataUniqueness(String login, List<String> phoneNumbers, List<String> emails) throws UserExistsException { //TODO maybe surround with try/catch
         if (userRepository.existsByLogin(login)) {
             throw new UserExistsException("A user with this login already exists");
         }
@@ -166,7 +172,7 @@ public class UserService {
         }
     }
 
-    private void checkForDataFormat(List<String> phoneNumbers, List<String> emails) throws IncorrectUserDataFormatException {
+    private void checkForDataFormat(List<String> phoneNumbers, List<String> emails) throws IncorrectUserDataFormatException { //TODO maybe surround with try/catch
         if (emails != null) {
             for (String email : emails) {
                 String emailRegex = "[_A-Za-z0-9-]+@[A-Za-z0-9-]+(.[A-Za-z0-9-]+)";

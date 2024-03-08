@@ -26,8 +26,8 @@ public class User {
     public String middleName;
 
     @Setter
-    @Column(nullable = false)
-    public String login; //TODO make unique
+    @Column(nullable = false, unique = true)
+    public String login;
 
     @Setter
     @Column(nullable = false)
@@ -37,7 +37,7 @@ public class User {
     public Date dateOfBirth;
 
     @Setter
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "emails",
             joinColumns = @JoinColumn(name = "user_id"),
             uniqueConstraints =  { @UniqueConstraint(columnNames = {"email"} ) })
@@ -45,7 +45,7 @@ public class User {
     public List<String> emails;
 
     @Setter
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "phone_numbers",
             joinColumns = @JoinColumn(name = "user_id"),
             uniqueConstraints = { @UniqueConstraint(columnNames = { "phone_number"} ) })
@@ -56,4 +56,6 @@ public class User {
     @OneToOne
     @JoinColumn(name = "bank_account_id", nullable = false)
     public BankAccount bankAccount;
+
+
 }
