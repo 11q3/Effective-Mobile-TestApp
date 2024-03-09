@@ -140,8 +140,8 @@ public class UserService {
     }
 
     @Transactional
-    public List<UserSearchResultDto> searchUsers(Date dateOfBirth, List<String> phoneNumbers, List<String> emails, String fullName) {
-        return userRepository.searchUsers(dateOfBirth, phoneNumbers, emails, fullName);
+    public List<UserSearchResultDto> searchUsers(Date dateOfBirth, List<String> emails, List<String> phoneNumbers, String fullName) {
+        return userRepository.searchUsers(dateOfBirth, emails, phoneNumbers, fullName);
     }
     private void checkForDataPresence(List<String> providedFields, List<String> userFields) throws UserDataDoesNotExistException { //TODO maybe surround with try/catch
         if (providedFields != null && userFields != null) {

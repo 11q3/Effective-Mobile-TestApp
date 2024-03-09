@@ -128,10 +128,12 @@ public class UserController {
     @GetMapping("/search")
     public ResponseEntity<List<UserSearchResultDto>> searchUsers(
             @RequestParam(required = false) Date dateOfBirth,
+            @RequestParam(required = false) List<String> emails,
             @RequestParam(required = false) List<String> phoneNumbers,
-            @RequestParam(required = false) String fullName,
-            @RequestParam(required = false) List<String> emails) {
-        List<UserSearchResultDto> users =  userService.searchUsers(dateOfBirth, phoneNumbers, emails, fullName);
+            @RequestParam(required = false) String fullName) {
+        List<UserSearchResultDto> users =  userService.searchUsers(dateOfBirth, emails, phoneNumbers, fullName);
+
+
         return ResponseEntity.ok(users);
     }
 }
