@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.sql.Date;
 import java.util.HashSet;
@@ -20,10 +21,12 @@ import java.util.Set;
 public class UserService {
     private final UserRepository userRepository;
     private final BankAccountService bankAccountService;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, BankAccountService bankAccountService) {
+    public UserService(UserRepository userRepository, BankAccountService bankAccountService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.bankAccountService = bankAccountService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -42,7 +45,7 @@ public class UserService {
         user.setLastName(lastName);
         user.setMiddleName(middleName);
         user.setLogin(login);
-        user.setPassword(password);
+        user.setPassword(passwordEncoder.encode(password));
 
         setEmails(emails, user);
 
@@ -248,7 +251,7 @@ public class UserService {
             throw new RuntimeException(e);
         }
 
-    }
+    } //TODO Refactor
 
     public UserDetailsService userDetailsService() {
         return this::getByUsername;

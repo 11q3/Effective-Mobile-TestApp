@@ -29,6 +29,7 @@ import java.util.List;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
+
 @EnableWebSecurity
 @Configuration
 public class SecurityConfiguration {
@@ -36,12 +37,14 @@ public class SecurityConfiguration {
     private final UserRepository userRepository;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public SecurityConfiguration(UserService userService, UserRepository userRepository, JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfiguration(UserService userService, UserRepository userRepository, JwtAuthenticationFilter jwtAuthenticationFilter, PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.passwordEncoder = passwordEncoder;
     }
 
 
@@ -49,7 +52,7 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                /*.httpBasic(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
 
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfiguration = new CorsConfiguration();
@@ -58,10 +61,10 @@ public class SecurityConfiguration {
                     corsConfiguration.setAllowedHeaders(List.of("*"));
                     corsConfiguration.setAllowCredentials(true);
                     return corsConfiguration;
-                }))*/
+                }))
 
-                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/api/v1/users/createUser", "/api/v1/users/sign-in", "/error").permitAll()
+                .authorizeHttpRequests((auth) -> auth
+                        .requestMatchers("/api/v1/users/createUser", "/api/v1/users/sign-in").permitAll()
                         .requestMatchers("/api/v1/users/search").authenticated()
                 )
 
@@ -86,10 +89,9 @@ public class SecurityConfiguration {
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userService.userDetailsService());
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
     }
-
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
@@ -97,8 +99,11 @@ public class SecurityConfiguration {
         return config.getAuthenticationManager();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+    @Autowired
+    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+        auth
+                .userDetailsService(userService.userDetailsService())
+                .passwordEncoder(passwordEncoder);
     }
+
 }
