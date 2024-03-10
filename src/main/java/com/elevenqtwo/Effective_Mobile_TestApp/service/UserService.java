@@ -8,6 +8,8 @@ import com.elevenqtwo.Effective_Mobile_TestApp.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -148,8 +150,8 @@ public class UserService {
     }
 
     @Transactional
-    public List<UserSearchResultDto> searchUsers(Date dateOfBirth, List<String> emails, List<String> phoneNumbers, String fullName) {
-        return userRepository.searchUsers(dateOfBirth, emails, phoneNumbers, fullName);
+    public Page<UserSearchResultDto> searchUsers(Date dateOfBirth, List<String> emails, List<String> phoneNumbers, String fullName, Pageable pageable) {
+        return userRepository.searchUsers(dateOfBirth, emails, phoneNumbers, fullName, pageable);
     }
     private void checkForDataPresence(List<String> providedFields, List<String> userFields) throws UserDataDoesNotExistException { //TODO maybe surround with try/catch
         if (providedFields != null && userFields != null) {

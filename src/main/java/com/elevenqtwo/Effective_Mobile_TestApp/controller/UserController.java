@@ -1,5 +1,4 @@
 package com.elevenqtwo.Effective_Mobile_TestApp.controller;
-
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserSearchResultDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserUpdateDto;
@@ -7,18 +6,27 @@ import com.elevenqtwo.Effective_Mobile_TestApp.exception.IncorrectUserDataFormat
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserDataDoesNotExistException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserExistsException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserNotFoundException;
-import com.elevenqtwo.Effective_Mobile_TestApp.model.User;
 import com.elevenqtwo.Effective_Mobile_TestApp.service.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.PagedModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Date;
 import java.util.List;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
-@RestController //TODO replace constructors with lombok in all code.
-@RequestMapping("/api/v1/users") //TODO make 2 api`s
+@RestController
+@RequestMapping("api/v1/users")
 public class UserController {
+
     private final UserService userService;
 
     public UserController(UserService userService) {
@@ -43,64 +51,31 @@ public class UserController {
         catch (UserExistsException | IncorrectUserDataFormatException e) {
             throw new RuntimeException(e);
         }
+        return ResponseEntity.status(HttpStatus.CREATED).body("User created successfully!");
+    }
 
-        return ResponseEntity.ok("User added successfully!");
+    @PostMapping("/addUserEmails")
+    public ResponseEntity<Object> addUserEmails(@RequestBody UserUpdateDto userUpdateDto) {
+        try {
+            userService.addUserEmails(userUpdateDto.id,
+                    userUpdateDto.getEmails());
+        } catch (UserNotFoundException | UserExistsException |
+                 IncorrectUserDataFormatException e) {
+            throw new RuntimeException(e);
+        }
+        return ResponseEntity.ok("User emails added successfully!");
     }
 
     @PostMapping("/addUserPhoneNumbers")
     public ResponseEntity<Object> addUserPhoneNumbers(@RequestBody UserUpdateDto userUpdateDto) {
         try {
-            userService.addUserPhoneNumbers(
-                    userUpdateDto.id,
-                    userUpdateDto.getPhoneNumbers()
-            );
-        } catch (UserExistsException | UserNotFoundException | IncorrectUserDataFormatException e) {
+            userService.addUserPhoneNumbers(userUpdateDto.id,
+                    userUpdateDto.getPhoneNumbers());
+        } catch (UserNotFoundException | UserExistsException |
+                 IncorrectUserDataFormatException e) {
             throw new RuntimeException(e);
         }
-
-        return ResponseEntity.ok("User updated successfully!");
-    }
-
-    @PostMapping("/addUserEmails")
-    public ResponseEntity<Object> addUserEmails(@RequestBody UserUpdateDto userUpdateDto) {
-        try { //TODO extract this logic deeper. maybe.
-            userService.addUserEmails(
-                    userUpdateDto.id,
-                    userUpdateDto.getEmails()
-            );
-        } catch (UserExistsException | UserNotFoundException | IncorrectUserDataFormatException e) {
-            throw new RuntimeException(e);
-        }
-
-        return ResponseEntity.ok("User emails added successfully!");
-    }
-
-    @PatchMapping("/patchUserEmails")
-    public ResponseEntity<Object> patchUserEmails(@RequestBody UserUpdateDto userUpdateDto) {
-        try {
-            userService.patchUserEmails(userUpdateDto.id,
-                    userUpdateDto.getEmails(),
-                    userUpdateDto.getReplacedEmails());
-        }
-         catch (UserNotFoundException | UserExistsException | UserDataDoesNotExistException |
-                IncorrectUserDataFormatException e) {
-            throw new RuntimeException(e);
-        }
-        return ResponseEntity.ok("User emails updated successfully!");
-    }
-
-    @PatchMapping("/patchUserPhoneNumbers")
-    public ResponseEntity<Object> patchUserPhoneNumbers(@RequestBody UserUpdateDto userUpdateDto) {
-        try {
-            userService.patchUserPhoneNumbers(userUpdateDto.id,
-                    userUpdateDto.getPhoneNumbers(),
-                    userUpdateDto.getReplacedPhoneNumbers());
-        }
-        catch (UserNotFoundException | UserExistsException | UserDataDoesNotExistException |
-               IncorrectUserDataFormatException e) {
-            throw new RuntimeException(e);
-        }
-        return ResponseEntity.ok("User phone numbers updated successfully!");
+        return ResponseEntity.ok("User phone numbers added successfully!");
     }
 
     @DeleteMapping("/deleteUserEmails")
@@ -125,15 +100,31 @@ public class UserController {
         return ResponseEntity.ok("User phone numbers deleted successfully!");
     }
 
+
     @GetMapping("/search")
-    public ResponseEntity<List<UserSearchResultDto>> searchUsers(
+    public ResponseEntity<CollectionModel<UserSearchResultDto>> searchUsers(
             @RequestParam(required = false) Date dateOfBirth,
             @RequestParam(required = false) List<String> emails,
             @RequestParam(required = false) List<String> phoneNumbers,
-            @RequestParam(required = false) String fullName) {
-        List<UserSearchResultDto> users =  userService.searchUsers(dateOfBirth, emails, phoneNumbers, fullName);
+            @RequestParam(required = false) String fullName,
+            @RequestParam(defaultValue = "id,asc") String[] sort,
+            Pageable pageable) {
 
+        Page<UserSearchResultDto> users = userService.searchUsers(dateOfBirth, emails, phoneNumbers, fullName, pageable);
 
-        return ResponseEntity.ok(users);
+        CollectionModel<UserSearchResultDto> pagedModel = PagedModel.of(users);
+
+        pagedModel.add(Link.of("/search?page=" + pageable.getPageNumber() +
+                "&size=" + pageable.getPageSize() + "&sort=" + sort[0] + "," + sort[1], "self").withSelfRel());
+        pagedModel.add(Link.of("/search?page=0&size=" + pageable.getPageSize() +
+                "&sort=" + sort[0] + "," + sort[1], "first").withRel("first"));
+        pagedModel.add(Link.of("/search?page=" + (users.getTotalPages() - 1) +
+                "&size=" + pageable.getPageSize() + "&sort=" + sort[0] + "," + sort[1], "self").withRel("last"));
+        pagedModel.add(Link.of("/search?page=" + (pageable.getPageNumber() + 1) +
+                "&size=" + pageable.getPageSize() + "&sort=" + sort[0] + "," + sort[1], "self").withRel("next"));
+        pagedModel.add(Link.of("/search?page=" + (pageable.getPageNumber() - 1) +
+                "&size=" + pageable.getPageSize() + "&sort=" + sort[0] + "," + sort[1], "self").withRel("prev"));
+
+        return ResponseEntity.ok(pagedModel);
     }
 }
