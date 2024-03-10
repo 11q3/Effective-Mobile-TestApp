@@ -16,8 +16,8 @@ import java.sql.Date;
 import java.util.List;
 
 
-@RestController
-@RequestMapping("/api/v1/users")
+@RestController //TODO replace constructors with lombok in all code.
+@RequestMapping("/api/v1/users") //TODO make 2 api`s
 public class UserController {
     private final UserService userService;
 

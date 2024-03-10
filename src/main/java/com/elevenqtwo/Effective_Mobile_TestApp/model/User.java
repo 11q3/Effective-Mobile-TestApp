@@ -1,40 +1,51 @@
 package com.elevenqtwo.Effective_Mobile_TestApp.model;
 
+import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserNotFoundException;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+
 import java.sql.Date;
+import java.util.Collection;
 import java.util.List;
 
 @Getter
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"login"})
 })
-public class User {
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public int id;
+    private int id;
 
     @Setter
-    public String firstName;
+    private String firstName;
 
     @Setter
-    public String lastName;
+    private String lastName;
 
     @Setter
-    public String middleName;
+    private String middleName;
 
     @Setter
     @Column(nullable = false, unique = true)
-    public String login;
+    private String login;
 
     @Setter
     @Column(nullable = false)
-    public String password; //TODO hashing
+    private String password; //TODO hashing
 
     @Setter
-    public Date dateOfBirth;
+    private Date dateOfBirth;
 
     @Setter
     @ElementCollection(fetch = FetchType.EAGER)
@@ -42,7 +53,7 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             uniqueConstraints =  { @UniqueConstraint(columnNames = {"email"} ) })
     @Column(name = "email", nullable = false)
-    public List<String> emails;
+    private List<String> emails;
 
     @Setter
     @ElementCollection(fetch = FetchType.EAGER)
@@ -50,12 +61,41 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             uniqueConstraints = { @UniqueConstraint(columnNames = { "phone_number"} ) })
     @Column(name = "phone_number", nullable = false)
-    public List<String> phoneNumbers;
+    private List<String> phoneNumbers;
 
     @Setter
     @OneToOne
     @JoinColumn(name = "bank_account_id", nullable = false)
-    public BankAccount bankAccount;
+    private BankAccount bankAccount;
 
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("NO_ROLE"));
+    }
+
+    @Override
+    public String getUsername() {
+        return login;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }
