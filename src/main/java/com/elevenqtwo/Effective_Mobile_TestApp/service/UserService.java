@@ -8,9 +8,8 @@ import com.elevenqtwo.Effective_Mobile_TestApp.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.sql.Date;
 import java.util.HashSet;
@@ -21,12 +20,10 @@ import java.util.Set;
 public class UserService {
     private final UserRepository userRepository;
     private final BankAccountService bankAccountService;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, BankAccountService bankAccountService, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, BankAccountService bankAccountService) {
         this.userRepository = userRepository;
         this.bankAccountService = bankAccountService;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -45,7 +42,7 @@ public class UserService {
         user.setLastName(lastName);
         user.setMiddleName(middleName);
         user.setLogin(login);
-        user.setPassword(passwordEncoder.encode(password));
+        user.setPassword(password);
 
         setEmails(emails, user);
 

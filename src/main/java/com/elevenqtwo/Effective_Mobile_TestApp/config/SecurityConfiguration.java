@@ -19,7 +19,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -36,14 +36,12 @@ public class SecurityConfiguration {
     private final UserRepository userRepository;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public SecurityConfiguration(UserService userService, UserRepository userRepository, JwtAuthenticationFilter jwtAuthenticationFilter, PasswordEncoder passwordEncoder) {
+    public SecurityConfiguration(UserService userService, UserRepository userRepository, JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.passwordEncoder = passwordEncoder;
     }
 
 
@@ -51,7 +49,7 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
+                /*.httpBasic(AbstractHttpConfigurer::disable)
 
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfiguration = new CorsConfiguration();
@@ -60,10 +58,10 @@ public class SecurityConfiguration {
                     corsConfiguration.setAllowedHeaders(List.of("*"));
                     corsConfiguration.setAllowCredentials(true);
                     return corsConfiguration;
-                }))
+                }))*/
 
                  .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/api/v1/users/createUser", "/api/v1/users/sign-in").permitAll()
+                        .requestMatchers("/api/v1/users/createUser", "/api/v1/users/sign-in", "/error").permitAll()
                         .requestMatchers("/api/v1/users/search").authenticated()
                 )
 
@@ -88,9 +86,10 @@ public class SecurityConfiguration {
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userService.userDetailsService());
-        authProvider.setPasswordEncoder(passwordEncoder);
+        authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
@@ -98,11 +97,8 @@ public class SecurityConfiguration {
         return config.getAuthenticationManager();
     }
 
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .userDetailsService(userService.userDetailsService())
-                .passwordEncoder(passwordEncoder);
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
     }
-
 }
