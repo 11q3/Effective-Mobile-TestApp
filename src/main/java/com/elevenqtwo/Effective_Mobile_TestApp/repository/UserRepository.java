@@ -2,6 +2,8 @@ package com.elevenqtwo.Effective_Mobile_TestApp.repository;
 
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserSearchResultDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -28,8 +30,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "(:emails IS NULL OR e IN :emails) AND " +
             "(:phoneNumbers IS NULL OR :phoneNumbers MEMBER OF u.phoneNumbers) AND " +
             "(:fullName IS NULL OR (u.lastName || ' ' || u.firstName || ' ' || u.middleName) LIKE :fullName || '%')")
-    List<UserSearchResultDto> searchUsers(@Param("dateOfBirth") Date dateOfBirth,
+    Page<UserSearchResultDto> searchUsers(@Param("dateOfBirth") Date dateOfBirth,
                                           @Param("emails") List<String> emails,
                                           @Param("phoneNumbers") List<String> phoneNumbers,
-                                          @Param("fullName") String fullName);
+                                          @Param("fullName") String fullName,
+                                          Pageable pageable);
 }

@@ -1,5 +1,4 @@
 package com.elevenqtwo.Effective_Mobile_TestApp.controller;
-
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserSearchResultDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserUpdateDto;
@@ -9,20 +8,37 @@ import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserExistsException;
 import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserNotFoundException;
 import com.elevenqtwo.Effective_Mobile_TestApp.model.User;
 import com.elevenqtwo.Effective_Mobile_TestApp.service.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.PagedModel;
+import org.springframework.hateoas.server.RepresentationModelProcessor;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Date;
 import java.util.List;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
-@RestController //TODO replace constructors with lombok in all code.
-@RequestMapping("/api/v1/users") //TODO make 2 api`s
+@RestController
+@RequestMapping("/users")
 public class UserController {
-    private final UserService userService;
 
-    public UserController(UserService userService) {
+    private final UserService userService;
+    private final PagedResourcesAssembler<UserSearchResultDto> pagedResourcesAssembler;
+
+    public UserController(UserService userService, PagedResourcesAssembler<UserSearchResultDto> pagedResourcesAssembler) {
         this.userService = userService;
+        this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
     @PostMapping("/createUser")
@@ -43,64 +59,31 @@ public class UserController {
         catch (UserExistsException | IncorrectUserDataFormatException e) {
             throw new RuntimeException(e);
         }
+        return ResponseEntity.status(HttpStatus.CREATED).body("User created successfully!");
+    }
 
-        return ResponseEntity.ok("User added successfully!");
+    @PostMapping("/addUserEmails")
+    public ResponseEntity<Object> addUserEmails(@RequestBody UserUpdateDto userUpdateDto) {
+        try {
+            userService.addUserEmails(userUpdateDto.id,
+                    userUpdateDto.getEmails());
+        } catch (UserNotFoundException | UserExistsException |
+                 IncorrectUserDataFormatException e) {
+            throw new RuntimeException(e);
+        }
+        return ResponseEntity.ok("User emails added successfully!");
     }
 
     @PostMapping("/addUserPhoneNumbers")
     public ResponseEntity<Object> addUserPhoneNumbers(@RequestBody UserUpdateDto userUpdateDto) {
         try {
-            userService.addUserPhoneNumbers(
-                    userUpdateDto.id,
-                    userUpdateDto.getPhoneNumbers()
-            );
-        } catch (UserExistsException | UserNotFoundException | IncorrectUserDataFormatException e) {
+            userService.addUserPhoneNumbers(userUpdateDto.id,
+                    userUpdateDto.getPhoneNumbers());
+        } catch (UserNotFoundException | UserExistsException |
+                 IncorrectUserDataFormatException e) {
             throw new RuntimeException(e);
         }
-
-        return ResponseEntity.ok("User updated successfully!");
-    }
-
-    @PostMapping("/addUserEmails")
-    public ResponseEntity<Object> addUserEmails(@RequestBody UserUpdateDto userUpdateDto) {
-        try { //TODO extract this logic deeper. maybe.
-            userService.addUserEmails(
-                    userUpdateDto.id,
-                    userUpdateDto.getEmails()
-            );
-        } catch (UserExistsException | UserNotFoundException | IncorrectUserDataFormatException e) {
-            throw new RuntimeException(e);
-        }
-
-        return ResponseEntity.ok("User emails added successfully!");
-    }
-
-    @PatchMapping("/patchUserEmails")
-    public ResponseEntity<Object> patchUserEmails(@RequestBody UserUpdateDto userUpdateDto) {
-        try {
-            userService.patchUserEmails(userUpdateDto.id,
-                    userUpdateDto.getEmails(),
-                    userUpdateDto.getReplacedEmails());
-        }
-         catch (UserNotFoundException | UserExistsException | UserDataDoesNotExistException |
-                IncorrectUserDataFormatException e) {
-            throw new RuntimeException(e);
-        }
-        return ResponseEntity.ok("User emails updated successfully!");
-    }
-
-    @PatchMapping("/patchUserPhoneNumbers")
-    public ResponseEntity<Object> patchUserPhoneNumbers(@RequestBody UserUpdateDto userUpdateDto) {
-        try {
-            userService.patchUserPhoneNumbers(userUpdateDto.id,
-                    userUpdateDto.getPhoneNumbers(),
-                    userUpdateDto.getReplacedPhoneNumbers());
-        }
-        catch (UserNotFoundException | UserExistsException | UserDataDoesNotExistException |
-               IncorrectUserDataFormatException e) {
-            throw new RuntimeException(e);
-        }
-        return ResponseEntity.ok("User phone numbers updated successfully!");
+        return ResponseEntity.ok("User phone numbers added successfully!");
     }
 
     @DeleteMapping("/deleteUserEmails")
@@ -125,15 +108,42 @@ public class UserController {
         return ResponseEntity.ok("User phone numbers deleted successfully!");
     }
 
+
     @GetMapping("/search")
-    public ResponseEntity<List<UserSearchResultDto>> searchUsers(
+    public ResponseEntity<PagedModel<UserSearchResultDto>> searchUsers(
             @RequestParam(required = false) Date dateOfBirth,
             @RequestParam(required = false) List<String> emails,
             @RequestParam(required = false) List<String> phoneNumbers,
-            @RequestParam(required = false) String fullName) {
-        List<UserSearchResultDto> users =  userService.searchUsers(dateOfBirth, emails, phoneNumbers, fullName);
+            @RequestParam(required = false) String fullName,
+            Pageable pageable) {
 
+        Page<UserSearchResultDto> users = userService.searchUsers(dateOfBirth, emails, phoneNumbers, fullName, pageable);
 
-        return ResponseEntity.ok(users);
+        Link previousPageLink = Link.of("/search?page=" + (pageable.getPageNumber() - 1) +
+                "&size=" + pageable.getPageSize() + "&sort=" + pageable.getSort().toString().replace(":", ","), "prev");
+
+        Link nextPageLink = Link.of("/search?page=" + (pageable.getPageNumber() + 1) +
+                "&size=" + pageable.getPageSize() + "&sort=" + pageable.getSort().toString().replace(":", ","), "next");
+
+        Link currentPageLink = Link.of("/search?page=" + pageable.getPageNumber() +
+                "&size=" + pageable.getPageSize() + "&sort=" + pageable.getSort().toString().replace(":", ","), "current");
+
+        Link firstPageLink = Link.of("/search?page=0&size=" + pageable.getPageSize() +
+                "&sort=" + pageable.getSort().toString().replace(":", ","), "first");
+
+        Link lastPageLink = Link.of("/search?page=" + (users.getTotalPages() - 1) +
+                "&size=" + pageable.getPageSize() + "&sort=" + pageable.getSort().toString().replace(":", ","), "last");
+
+        Link sortLink = Link.of("/search?sort=" + (pageable.getSort().isEmpty() ? "id,asc" : pageable.getSort().toString().replace(":", ",")), "sort");
+
+        List<Link> links = List.of(previousPageLink, nextPageLink, currentPageLink, firstPageLink, lastPageLink, sortLink);
+
+        PagedModel<UserSearchResultDto> pagedModel = (PagedModel<UserSearchResultDto>) PagedModel.of(users, links);
+
+        for (Link link : links) {
+            pagedModel.add(link);
+        }
+
+        return ResponseEntity.ok(pagedModel);
     }
 }
