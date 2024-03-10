@@ -12,13 +12,13 @@ public class BankAccount {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public int id;
+    private int id;
 
     @Setter
     @OneToOne(mappedBy = "bankAccount")
-    public User user;
+    private User user;
 
-    public BigDecimal balance;
+    private BigDecimal balance;
 
     @PrePersist
     @PreUpdate
@@ -28,7 +28,7 @@ public class BankAccount {
         }
     }
 
-    public void setBalance(BigDecimal balance) {
+    private void setBalance(BigDecimal balance) {
         this.balance = balance;
         checkBalance();
     }

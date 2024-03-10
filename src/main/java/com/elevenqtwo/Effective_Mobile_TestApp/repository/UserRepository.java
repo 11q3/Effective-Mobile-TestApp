@@ -8,9 +8,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Optional;
 
 
 public interface UserRepository extends JpaRepository<User, Long> {
+
+    Optional<User> findByLogin(String login);
     boolean existsByLogin(String login);
 
     @Query("SELECT COUNT(u) > 0 FROM User u WHERE u IN (SELECT u2 FROM User u2 JOIN u2.emails e WHERE e IN :emails)")

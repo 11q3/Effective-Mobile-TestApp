@@ -20,7 +20,7 @@ public class UserSearchResultDto {
     private List<String> phoneNumbers;
 
     public UserSearchResultDto(User user) {
-        this.id = user.id;
+        this.id = user.getId();
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();
         this.middleName = user.getMiddleName();
