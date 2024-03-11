@@ -1,6 +1,5 @@
 package com.elevenqtwo.Effective_Mobile_TestApp.model;
 
-import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserNotFoundException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,45 +8,38 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.sql.Date;
 import java.util.Collection;
 import java.util.List;
 
+@Setter
 @Getter
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"login"})
+        @UniqueConstraint(columnNames = {"login"} )
 })
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
-    @Setter
     private String firstName;
 
-    @Setter
     private String lastName;
 
-    @Setter
     private String middleName;
 
-    @Setter
     @Column(nullable = false, unique = true)
     private String login;
 
-    @Setter
     @Column(nullable = false)
-    private String password; //TODO hashing
+    private String password;
 
-    @Setter
     private Date dateOfBirth;
 
-    @Setter
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "emails",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -55,7 +47,6 @@ public class User implements UserDetails {
     @Column(name = "email", nullable = false)
     private List<String> emails;
 
-    @Setter
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "phone_numbers",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -63,7 +54,6 @@ public class User implements UserDetails {
     @Column(name = "phone_number", nullable = false)
     private List<String> phoneNumbers;
 
-    @Setter
     @OneToOne
     @JoinColumn(name = "bank_account_id", nullable = false)
     private BankAccount bankAccount;

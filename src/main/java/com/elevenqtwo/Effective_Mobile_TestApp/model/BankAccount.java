@@ -20,6 +20,9 @@ public class BankAccount {
 
     private BigDecimal balance;
 
+    @Setter
+    private BigDecimal initialBalance = BigDecimal.ZERO;
+
     @PrePersist
     @PreUpdate
     public void checkBalance() {
@@ -28,7 +31,7 @@ public class BankAccount {
         }
     }
 
-    private void setBalance(BigDecimal balance) {
+    public void setBalance(BigDecimal balance) {
         this.balance = balance;
         checkBalance();
     }

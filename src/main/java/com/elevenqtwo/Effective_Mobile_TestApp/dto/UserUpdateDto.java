@@ -6,8 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class UserUpdateDto { //TODO Check if i even can use this dto for both emails and phoneNumbers lol
-                             //TODO to do something with duplicates of emails and phoneNumbers
+public class UserUpdateDto {
 
     public Long id;
 

@@ -13,6 +13,7 @@ public class BankAccountService {
     }
 
     public void createBankAccount(BankAccount bankAccount) {
+        bankAccount.setInitialBalance(bankAccount.getBalance());
         bankAccountRepository.save(bankAccount);
     }
 

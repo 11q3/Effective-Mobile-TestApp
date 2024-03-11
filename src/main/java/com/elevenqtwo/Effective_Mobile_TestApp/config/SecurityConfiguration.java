@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -30,19 +31,20 @@ import java.util.List;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 
+@EnableScheduling
 @EnableWebSecurity
 @Configuration
 public class SecurityConfiguration {
     private final UserService userService;
-    private final UserRepository userRepository;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public SecurityConfiguration(UserService userService, UserRepository userRepository, JwtAuthenticationFilter jwtAuthenticationFilter, PasswordEncoder passwordEncoder) {
+    public SecurityConfiguration(UserService userService,
+                                 JwtAuthenticationFilter jwtAuthenticationFilter,
+                                 PasswordEncoder passwordEncoder) {
         this.userService = userService;
-        this.userRepository = userRepository;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.passwordEncoder = passwordEncoder;
     }
@@ -52,37 +54,14 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
-
-                .cors(cors -> cors.configurationSource(request -> {
-                    var corsConfiguration = new CorsConfiguration();
-                    corsConfiguration.setAllowedOriginPatterns(List.of("*"));
-                    corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    corsConfiguration.setAllowedHeaders(List.of("*"));
-                    corsConfiguration.setAllowCredentials(true);
-                    return corsConfiguration;
-                }))
-
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/api/v1/users/createUser", "/api/v1/users/sign-in").permitAll()
-                        .anyRequest().permitAll()
-                )
+                        .requestMatchers("/api/v1/users/create", "/api/v1/users/sign-in").permitAll()
+                        .anyRequest().authenticated())
 
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return username -> userRepository
-                .findByLogin(username)
-                .orElseThrow(
-                        () -> new UsernameNotFoundException(
-                                String.format("User: %s, not found", username)
-                        )
-                );
     }
 
     @Bean
@@ -100,10 +79,8 @@ public class SecurityConfiguration {
     }
 
     @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .userDetailsService(userService.userDetailsService())
+    public void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userService.userDetailsService())
                 .passwordEncoder(passwordEncoder);
     }
-
 }

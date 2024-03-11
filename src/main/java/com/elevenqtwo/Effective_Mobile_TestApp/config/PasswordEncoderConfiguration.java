@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 @Configuration
 @ComponentScan
-@Component
 public class PasswordEncoderConfiguration {
 
     @Bean

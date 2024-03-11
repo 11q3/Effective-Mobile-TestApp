@@ -9,7 +9,7 @@ import javax.validation.constraints.Size;
 public class SignInRequestDto {
 
     @NotBlank(message = "The username cannot be empty")
-    private String username;
+    private String login;
 
     @NotBlank(message = "The password cannot be empty")
     private String password;
