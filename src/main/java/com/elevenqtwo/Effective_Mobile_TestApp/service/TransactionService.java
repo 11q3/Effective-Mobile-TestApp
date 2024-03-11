@@ -19,7 +19,6 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
 
-
     public TransactionService(UserRepository userRepository, TransactionRepository transactionRepository) {
         this.userRepository = userRepository;
         this.transactionRepository = transactionRepository;

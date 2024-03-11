@@ -11,12 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("/api/v1/users")
-public class AuthController {
+@RequestMapping("/api/v1/users/")
+public class UserAuthController {
     private final AuthenticationService authenticationService;
 
-
-    public AuthController(AuthenticationService authenticationService) {
+    public UserAuthController(AuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
     }
 

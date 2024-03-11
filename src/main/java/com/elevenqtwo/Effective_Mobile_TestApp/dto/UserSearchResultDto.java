@@ -11,7 +11,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 public class UserSearchResultDto {
-    private int id;
+    private Long id;
     private String firstName;
     private String lastName;
     private String middleName;

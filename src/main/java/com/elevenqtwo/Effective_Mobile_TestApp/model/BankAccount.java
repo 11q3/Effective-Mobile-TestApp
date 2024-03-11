@@ -19,8 +19,9 @@ public class BankAccount {
     private User user;
 
     private BigDecimal balance;
+
     @Setter
-        private BigDecimal initialBalance = BigDecimal.ZERO;
+    private BigDecimal initialBalance = BigDecimal.ZERO;
 
     @PrePersist
     @PreUpdate
