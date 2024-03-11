@@ -12,20 +12,25 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
+@Table(name = "Transactions")
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Setter
     private BigDecimal amount;
+
     @Setter
     @ManyToOne
     @JoinColumn(name = "source_account_id")
     private BankAccount sourceAccount;
+
     @Setter
     @ManyToOne
     @JoinColumn(name = "destination_account_id")
     private BankAccount destinationAccount;
+
     @Setter
     private LocalDateTime timestamp;
 }

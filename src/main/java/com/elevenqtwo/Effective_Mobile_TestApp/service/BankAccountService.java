@@ -4,6 +4,8 @@ import com.elevenqtwo.Effective_Mobile_TestApp.model.BankAccount;
 import com.elevenqtwo.Effective_Mobile_TestApp.repository.BankAccountRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 public class BankAccountService {
     private final BankAccountRepository bankAccountRepository;
@@ -13,6 +15,7 @@ public class BankAccountService {
     }
 
     public void createBankAccount(BankAccount bankAccount) {
+        bankAccount.setInitialBalance(bankAccount.getBalance());
         bankAccountRepository.save(bankAccount);
     }
 
