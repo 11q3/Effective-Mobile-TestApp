@@ -28,7 +28,7 @@ public class BankAccount {
         }
     }
 
-    private void setBalance(BigDecimal balance) {
+    public void setBalance(BigDecimal balance) {
         this.balance = balance;
         checkBalance();
     }

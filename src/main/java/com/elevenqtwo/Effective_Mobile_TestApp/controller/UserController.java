@@ -1,16 +1,13 @@
 package com.elevenqtwo.Effective_Mobile_TestApp.controller;
+import com.elevenqtwo.Effective_Mobile_TestApp.dto.TransferRequestDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserSearchResultDto;
 import com.elevenqtwo.Effective_Mobile_TestApp.dto.UserUpdateDto;
-import com.elevenqtwo.Effective_Mobile_TestApp.exception.IncorrectUserDataFormatException;
-import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserDataDoesNotExistException;
-import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserExistsException;
-import com.elevenqtwo.Effective_Mobile_TestApp.exception.UserNotFoundException;
+import com.elevenqtwo.Effective_Mobile_TestApp.exception.*;
+import com.elevenqtwo.Effective_Mobile_TestApp.service.TransactionService;
 import com.elevenqtwo.Effective_Mobile_TestApp.service.UserService;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
@@ -25,12 +22,14 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
 @RequestMapping("api/v1/users")
-public class UserController {
+public class UserController { //TODO todo something with controllers
 
     private final UserService userService;
 
-    public UserController(UserService userService) {
+    private final TransactionService transactionService;
+    public UserController(UserService userService, TransactionService transactionService) {
         this.userService = userService;
+        this.transactionService = transactionService;
     }
 
     @PostMapping("/createUser")
@@ -126,5 +125,18 @@ public class UserController {
                 "&size=" + pageable.getPageSize() + "&sort=" + sort[0] + "," + sort[1], "self").withRel("prev"));
 
         return ResponseEntity.ok(pagedModel);
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<Object> transfer(@RequestBody TransferRequestDto request) {
+        try {
+            transactionService.transfer(
+                    request.getSourceUserId(),
+                    request.getDestinationUserId(),
+                    request.getAmount());
+        } catch (UserNotFoundException | InsufficientBalanceException e) {
+            throw new RuntimeException(e);
+        }
+        return ResponseEntity.ok("Transfer successful");
     }
 }

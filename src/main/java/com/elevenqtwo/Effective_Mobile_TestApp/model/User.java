@@ -20,7 +20,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"login"})
+        @UniqueConstraint(columnNames = {"login"} )
 })
 public class User implements UserDetails {
     @Id
