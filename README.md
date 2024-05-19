@@ -1,53 +1,53 @@
-# Тестовое задание
-Необходимо написать сервис для “банковских” операций. В нашей системе есть пользователи (клиенты), у каждого клиента есть строго один “банковский аккаунт”, в котором изначально лежит какая-то сумма. Деньги можно переводить между клиентами. На средства также начисляются проценты.
+# Test task
+It is necessary to write a service for “banking” operations. There are users (clients) in our system, each client has strictly one “bank account”, which initially contains some amount. Money can be transferred between clients. Interest is also accrued on the funds.
 
-## Функциональные требования:
-В системе есть пользователи, у каждого пользователя есть строго один “банковский аккаунт”. 
-У пользователя также есть телефон и email. Телефон и или email должен быть минимум один. 
-На “банковском счету” должна быть какая-то изначальная сумма. Также у пользователя должна быть указана дата рождения и ФИО.
+## Functional requirements:
+There are users in the system, each user has strictly one “bank account". 
+The user also has a phone number and email address. There must be at least one phone number and or email address. 
+There must be some initial amount in the “bank account”. The user must also have a date of birth and full name.
 
-Для простоты будем считать что в системе нет ролей, только обычные клиенты.
-Пусть будет служебный апи (с открытым доступом), через который можно заводить новых пользователей в системе,
-указав логин, пароль, изначальную сумму, телефон и email (логин, телефон и email не должны быть заняты). 
-Баланс счета клиента не может уходит в минус ни при каких обстоятельствах.
-Пользователь может добавить/сменить свои номер телефона и/или email, если они еще не заняты другими пользователями.
-Пользователь может удалить свои телефон и/или email. При этом нельзя удалить последний.
+For simplicity, we will assume that there are no roles in the system, only ordinary clients.
+Let there be a service API (with open access) through which you can create new users in the system
+by specifying a username, password, initial amount, phone and email (login, phone and email should not be occupied). 
+The client's account balance cannot go into negative territory under any circumstances.
+The user can add/change their phone number and/or email if they are not already occupied by other users.
+The user can delete their phone and/or email. However, you cannot delete the last one.
 
-Остальные данные пользователь не может менять.
+The user cannot change the rest of the data.
 
-Сделать АПИ поиска. Искать можно любого клиента. Должна быть фильтрация и пагинация/сортировка. Фильтры:
-  Если передана дата рождения, то фильтр записей, где дата рождения больше чем переданный в запросе.
-  Если передан телефон, то фильтр по 100% сходству.
-  Если передано ФИО, то фильтр по like форматом ‘{text-from-request-param}%’
-  Если передан email, то фильтр по 100% сходству. 
+Make a search API. You can search for any client. There should be filtering and pagination/sorting. Filters:
+  If the date of birth is passed, then filter records where the date of birth is greater than the one passed in the request.
+  If the phone number is transferred, then the filter is based on 100% similarity.
+  If the full name is passed, then filter by like format ‘{text-from-request-param}%’
+  If an email is sent, then the filter is based on 100% similarity. 
 
-Доступ к АПИ должен быть аутентифицирован (кроме служебного апи для создания новых клиентов).
+Access to the API must be authenticated (except for the service API for creating new clients).
 
-Раз в минуту баланс каждого клиента увеличиваются на 5% но не более 207% от начального депозита.
-Например:
-Было: 100, стало: 105.
-Было: 105, стало:110.25.
-Реализовать функционал перевода денег с одного счета на другой. Со счета аутентифицированного пользователя, на счёт другого пользователя. Сделать все необходимые валидации и потокобезопасной.
+Once a minute, the balance of each client is increased by 5%, but not more than 207% of the initial deposit.
+For example:
+It was: 100, it became: 105.
+It was: 105, it became:110.25.
+Implement the functionality of transferring money from one account to another. From an authenticated user's account to another user's account. Make all necessary validations and thread-safe.
 
 
-## Нефункциональные требования:
-Добавить OpenAPI/Swagger
-Добавить логирование
-Аутентификация через JWT.
-Нужно сделать тесты на покрытие функционала трансфера денег.
+## Non-functional Requirements:
+Add OpenAPI/Swagger
+Add Logging
+Authentication via JWT.
+We need to do tests to cover the functionality of money transfer.
 
-### Стек:
+### Stack:
 Java 17
 Spring Boot 3
-База данных PostgreSQL
+PostgreSQL database
 Maven
 REST API
-Дополнительные технологии (Redis, ElasticSearch и т.д.) на ваше усмотрение.
-Фронтенд не нужен
+Additional technologies (Redis, ElasticSearch, etc.) are at your discretion.
+You don't need a frontend
 
-Результат предоставить в виде публичного репозитория на github.
-
-
+The result should be provided as a public repository on github.
 
 
-## Максимально сложно было уложиться в данную на задание неделю, из-за недостатка времени в тестовом задании не имплементированны Логирование, Swagger и тесты.
+
+
+## It was as difficult as possible to keep up with the week given for the task, due to lack of time, Logging, Swagger and tests were not implemented in the test task.
